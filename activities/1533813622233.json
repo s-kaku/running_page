@@ -1,0 +1,22 @@
+{
+    "id": "757829ba-3e05-4acd-ad47-b1ac78a7f028",
+    "type": "run",
+    "app_id": "com.nike.sport.running.ios",
+    "start_epoch_ms": 1533813622233,
+    "end_epoch_ms": 1533813622233,
+    "last_modified": 1534165314304,
+    "active_duration_ms": 0,
+    "session": false,
+    "delete_indicator": false,
+    "summaries": [],
+    "sources": [],
+    "tags": {
+        "com.nike.running.goaltype": "freeRun",
+        "location": "indoors"
+    },
+    "change_tokens": [
+        "86983e2ff1263d553bda1742242105d3f849eb23821d3437dd22b16d44475d1f:1534165314304"
+    ],
+    "metric_types": [],
+    "moments": []
+}

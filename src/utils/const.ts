@@ -50,14 +50,14 @@ const SHOW_ELEVATION_GAIN = false;
 const RICH_TITLE = false;
 
 // IF you outside China please make sure IS_CHINESE = false
-const IS_CHINESE = true;
+const IS_CHINESE = false;
 const USE_ANIMATION_FOR_GRID = false;
 const CHINESE_INFO_MESSAGE = (yearLength: number, year: string): string => {
   const yearStr = year === 'Total' ? '所有' : ` ${year} `;
   return `我用 App 记录自己跑步 ${yearLength} 年了，下面列表展示的是${yearStr}的数据`;
 };
 const ENGLISH_INFO_MESSAGE = (yearLength: number, year: string): string =>
-  `Running Journey with ${yearLength} Years, the table shows year ${year} data`;
+  `Logged ${yearLength} Years of Journey, the map shows routes in ${year} `;
 
 // not support English for now
 const CHINESE_LOCATION_INFO_MESSAGE_FIRST =
@@ -179,15 +179,15 @@ export const SWIMMING_COLOR = 'rgb(255,51,51)';
 
 // map tiles vendor, maptiler or mapbox or stadiamaps
 // if you want to use maptiler, set the access token in MAP_TILE_ACCESS_TOKEN
-export const MAP_TILE_VENDOR = 'mapbox';
+export const MAP_TILE_VENDOR = 'maptiler';
 
 // map tiles style name, see MAP_TILE_STYLES for more details
-export const MAP_TILE_STYLE = 'dark-v10';
+export const MAP_TILE_STYLE = 'dataviz-dark';
 
 // access token. you can apply a new one, it's free.
 // maptiler: Gt5R0jT8tuIYxW6sNrAg | sign up at https://cloud.maptiler.com/auth/widget
 // stadiamaps: 8a769c5a-9125-4936-bdcf-a6b90cb5d0a4 |sign up at https://client.stadiamaps.com/signup/
-export const MAP_TILE_ACCESS_TOKEN = 'Gt5R0jT8tuIYxW6sNrAg';
+export const MAP_TILE_ACCESS_TOKEN = 'LvNFaJ6eHqzHlASJ84eG';
 
 export const MAP_TILE_STYLES = {
   maptiler: {

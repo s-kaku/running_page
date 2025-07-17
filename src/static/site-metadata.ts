@@ -15,9 +15,9 @@ const getBasePath = () => {
 };
 
 const data: ISiteMetadataResult = {
-  siteTitle: 'Running Page',
-  siteUrl: 'https://yihong.run',
-  logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQTtc69JxHNcmN1ETpMUX4dozAgAN6iPjWalQ&usqp=CAU',
+  siteTitle: 'Kuro\'s Running Page',
+  siteUrl: 'https://www.strava.com/athletes/18895974',
+  logo: 'https://avatars.githubusercontent.com/u/1589528?v=4&size=64',
   description: 'Personal site and blog',
   navLinks: [
     {
@@ -25,8 +25,8 @@ const data: ISiteMetadataResult = {
       url: `${getBasePath()}/summary`,
     },
     {
-      name: 'Blog',
-      url: 'https://github.com/yihong0618/gitblog',
+      name: 'Strava',
+      url: 'https://www.strava.com/athletes/18895974',
     },
     {
       name: 'About',
