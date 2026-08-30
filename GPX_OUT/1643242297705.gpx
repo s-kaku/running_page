@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx xmlns="http://www.topografix.com/GPX/1/1" xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" version="1.1" creator="gpx.py -- https://github.com/tkrajina/gpxpy">
+  <trk>
+    <name>Morning Run With Headspace</name>
+    <trkseg>
+      <trkpt lat="35.72564057986174" lon="139.81969747524087">
+        <ele>1.16649036295712</ele>
+        <time>2022-01-26T23:40:53Z</time>
+      </trkpt>
+      <trkpt lat="35.72572262448582" lon="139.81975837029432">
+        <ele>1.1404540408402681</ele>
+        <time>2022-01-26T23:41:06Z</time>
+      </trkpt>
+      <trkpt lat="35.72580777917861" lon="139.81982202185876">
+        <ele>0.9194619497284293</ele>
+        <time>2022-01-26T23:53:25Z</time>
+      </trkpt>
+      <trkpt lat="35.72573501123587" lon="139.8197510872424">
+        <ele>0.6203041123226285</ele>
+        <time>2022-01-26T23:54:08.999000Z</time>
+      </trkpt>
+      <trkpt lat="35.725805600680545" lon="139.8198347351275">
+        <ele>1.5001098262146115</ele>
+        <time>2022-01-26T23:58:12.999000Z</time>
+      </trkpt>
+      <trkpt lat="35.72573138286322" lon="139.81977153493196">
+        <ele>1.492033114656806</ele>
+        <time>2022-01-26T23:58:18.999000Z</time>
+      </trkpt>
+      <trkpt lat="35.72564490379634" lon="139.81972287708064">
+        <ele>1.7151772985234857</ele>
+        <time>2022-01-27T00:00:09.999000Z</time>
+      </trkpt>
+      <trkpt lat="35.72569436486897" lon="139.81982579949553">
+        <ele>2.1297252401709557</ele>
+        <time>2022-01-27T00:01:06Z</time>
+      </trkpt>
+      <trkpt lat="35.725740134838446" lon="139.8197112323321">
+        <ele>2.2220721347257495</ele>
+        <time>2022-01-27T00:04:17.999000Z</time>
+      </trkpt>
+      <trkpt lat="35.72575244277057" lon="139.81982074474772">
+        <ele>2.3459944715723395</ele>
+        <time>2022-01-27T00:07:00.999000Z</time>
+      </trkpt>
+      <trkpt lat="35.725700515698286" lon="139.8197294497983">
+        <ele>1.5988896358758211</ele>
+        <time>2022-01-27T00:07:35Z</time>
+      </trkpt>
+      <trkpt lat="35.72577588476728" lon="139.81979755433733">
+        <ele>1.4865121385082603</ele>
+        <time>2022-01-27T00:09:30Z</time>
+      </trkpt>
+      <trkpt lat="35.725761053168895" lon="139.81967707530393">
+        <time>2022-01-27T00:10:27.999000Z</time>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>

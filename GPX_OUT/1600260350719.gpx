@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx xmlns="http://www.topografix.com/GPX/1/1" xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" version="1.1" creator="gpx.py -- https://github.com/tkrajina/gpxpy">
+  <trk>
+    <name>水曜日 ラン</name>
+    <trkseg>
+      <trkpt lat="35.72982522662331" lon="139.8280416057816">
+        <ele>0.1611815094947815</ele>
+        <time>2020-09-16T12:45:31.174000Z</time>
+      </trkpt>
+      <trkpt lat="35.72977242063333" lon="139.82813162742167">
+        <ele>7.535385038279872</ele>
+        <time>2020-09-16T12:45:34.371000Z</time>
+      </trkpt>
+      <trkpt lat="35.729724224690095" lon="139.82825316501766">
+        <ele>7.2764377105468325</ele>
+        <time>2020-09-16T12:45:38.711000Z</time>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>

@@ -21,7 +21,7 @@ JSON_FILE = os.path.join(parent, "src", "static", "activities.json")
 SYNCED_FILE = os.path.join(parent, "imported.json")
 
 
-BASE_TIMEZONE = "Asia/Shanghai"
+BASE_TIMEZONE = "Asia/Tokyo"
 UTC_TIMEZONE = "UTC"
 
 start_point = namedtuple("start_point", "lat lon")
