@@ -1,0 +1,22 @@
+<gpx xmlns:ns3="http://www.garmin.com/xmlschemas/TrackPointExtension/v1" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ns2="http://www.garmin.com/xmlschemas/GpxExtensions/v3" creator="Garmin Connect" version="1.1" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/11.xsd">
+  <extensions>
+<distance>5734.93</distance>
+<average_hr>126.0</average_hr>
+<average_speed>2.986000061035156</average_speed>
+<start_time>2026-02-15T07:21:24+00:00</start_time>
+<end_time>2026-02-15T07:53:24.573000+00:00</end_time>
+<moving_time>1904.139</moving_time>
+<elapsed_time>1924.681</elapsed_time>
+</extensions>
+<metadata>
+    <link href="connect.garmin.com">
+      <text>Garmin Connect</text>
+    </link>
+    <time>2026-02-15T07:21:24.000Z</time>
+  </metadata>
+  <trk>
+    <name>トレッドミル</name>
+    <type>treadmill_running</type>
+    <trkseg/>
+  </trk>
+</gpx>
