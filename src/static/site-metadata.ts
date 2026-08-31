@@ -15,9 +15,9 @@ const getBasePath = () => {
 };
 
 const data: ISiteMetadataResult = {
-  siteTitle: "Kuros Running Page",
-  siteUrl: "https://instagram.com/kurop",
-  logo: "https://avatars.githubusercontent.com/u/1589528?v=4",
+  siteTitle: 'Kuros Running Page',
+  siteUrl: 'https://instagram.com/kurop',
+  logo: 'https://avatars.githubusercontent.com/u/1589528?v=4',
   description: 'Personal site and blog',
   navLinks: [
     {
