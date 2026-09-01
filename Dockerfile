@@ -1,5 +1,6 @@
+# syntax=docker/dockerfile:1
 
-FROM python:3.10.5-slim AS develop-py
+FROM python:3.12-slim-bullseye AS develop-py
 WORKDIR /root/running_page
 COPY ./requirements.txt /root/running_page/requirements.txt
 RUN sed -i 's@http://archive.ubuntu.com/ubuntu/@https://mirrors.tuna.tsinghua.edu.cn/ubuntu/@g' /etc/apt/sources.list \
@@ -23,7 +24,6 @@ RUN npm config set registry https://registry.npmmirror.com \
 FROM develop-py AS data
 ARG app
 ARG nike_refresh_token
-ARG secret_string
 ARG client_id
 ARG client_secret
 ARG refresh_token
@@ -34,14 +34,22 @@ ARG keep_password
 WORKDIR /root/running_page
 COPY . /root/running_page/
 ARG DUMMY=unknown
-RUN DUMMY=${DUMMY}; \
+RUN --mount=type=secret,id=garmin_token_b64 \
+  set -eu; \
+  DUMMY=${DUMMY}; \
   echo $app ; \
   if [ "$app" = "NRC" ] ; then \
   python3 run_page/nike_sync.py ${nike_refresh_token}; \
   elif [ "$app" = "Garmin" ] ; then \
-  python3 run_page/garmin_sync.py ${secret_string} ; \
+  base64 --decode /run/secrets/garmin_token_b64 > /tmp/garmin_tokens.json; \
+  chmod 600 /tmp/garmin_tokens.json; \
+  python3 run_page/garmin_sync.py /tmp/garmin_tokens.json; \
+  rm /tmp/garmin_tokens.json; \
   elif [ "$app" = "Garmin-CN" ] ; then \
-  python3 run_page/garmin_sync.py ${secret_string} --is-cn ; \
+  base64 --decode /run/secrets/garmin_token_b64 > /tmp/garmin_tokens.json; \
+  chmod 600 /tmp/garmin_tokens.json; \
+  python3 run_page/garmin_sync.py /tmp/garmin_tokens.json --is-cn; \
+  rm /tmp/garmin_tokens.json; \
   elif [ "$app" = "Strava" ] ; then \
   python3 run_page/strava_sync.py ${client_id} ${client_secret} ${refresh_token};\
   elif [ "$app" = "Nike_to_Strava" ] ; then \

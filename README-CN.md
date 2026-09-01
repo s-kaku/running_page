@@ -3,12 +3,15 @@
 1. clone or Fork before vercel 404 need to pull the latest code
 2. python in README means python3 python
 3. use v2.0 need change vercel setting from gatsby to vite
-4. 2023.09.26 garmin need secret_string(and in Actions) get
+4. Garmin 认证使用原生 DI OAuth token，需要在 Python 3.12 或更高版本的本地环境中生成。
 
    ```bash
-     python run_page/get_garmin_secret.py ${email} ${password}
+     umask 077
+     mkdir -p "$HOME/.running-page"
+     chmod 700 "$HOME/.running-page"
+     python run_page/get_garmin_secret.py ${email} > "$HOME/.running-page/garmin_token.b64"
      # if cn
-     python run_page/get_garmin_secret.py ${email} ${password} --is-cn
+     python run_page/get_garmin_secret.py ${email} --is-cn > "$HOME/.running-page/garmin_cn_token.b64"
    ```
 
 5. 2024.09.29: Added `Elevation Gain` field, If you forked the project before this update, please run the following command:
@@ -195,7 +198,7 @@ R.I.P. 希望大家都能健康顺利的跑过终点，逝者安息。
 git clone https://github.com/yihong0618/running_page.git --depth=1
 ```
 
-## 安装及测试 (node >= 20 python >= 3.11)
+## 安装及测试 (node >= 20 python >= 3.12)
 
 ```bash
 pip3 install -r requirements.txt
@@ -236,10 +239,10 @@ TUI 中的键盘快捷键：
 docker build -t running_page:latest . --build-arg app=NRC --build-arg nike_refresh_token=""
 
 # Garmin
-docker build -t running_page:latest . --build-arg app=Garmin --build-arg secret_string=""
+docker build -t running_page:latest . --build-arg app=Garmin --secret id=garmin_token_b64,src="$HOME/.running-page/garmin_token.b64"
 
 # Garmin-CN
-docker build -t running_page:latest . --build-arg app=Garmin-CN --build-arg secret_string=""
+docker build -t running_page:latest . --build-arg app=Garmin-CN --secret id=garmin_token_b64,src="$HOME/.running-page/garmin_cn_token.b64"
 
 # Strava
 docker build -t running_page:latest . --build-arg app=Strava --build-arg client_id=""  --build-arg client_secret=""  --build-arg refresh_token=""
@@ -608,25 +611,33 @@ python run_page/tulipsport_sync.py nLgy****RyahI
 
 - 如果你想同步 `fit` 格式，增加命令 --fit
 
-- 如果你使用 Garmin 作为数据源建议您将代码拉取到本地获取 Garmin 国际区的密钥，注意**Python 版本必须>=3.8**
+- 请在可信的本地环境生成 Garmin token，注意 **Python 版本必须 >=3.12**。
 
-#### 获取佳明国际区的密钥
+#### 生成佳明国际区 token
 
-在终端中输入以下命令
+密码和 MFA 验证码会在需要时交互式输入，不会写入 shell 历史。输出为 base64 编码的原生 DI OAuth token。现有的 Garth `GARMIN_SECRET_STRING` 无法复用，必须重新生成。
 
 ```bash
-# 获取密钥
-python run_page/get_garmin_secret.py ${your email} ${your password}
+umask 077
+mkdir -p "$HOME/.running-page"
+chmod 700 "$HOME/.running-page"
+python run_page/get_garmin_secret.py ${your_email} > "$HOME/.running-page/garmin_token.b64"
 ```
 
-#### 执行佳明国际区同步脚本
+使用 GitHub Actions 时，将文件内容保存为仓库 Secret `GARMIN_TOKEN_B64`。workflow 会在每次运行后写回刷新后的 token。还需要创建一个仅限当前仓库、拥有 **Secrets: read and write** 权限的 fine-grained personal access token，并保存为 `GARMIN_SECRET_UPDATER_TOKEN`。权限说明见 [GitHub Actions Secrets 仓库权限](https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens#repository-permissions-for-actions-secrets)。
 
-复制上述终端中输出的密钥，如果您是使用 GitHub 请在 GitHub Action 中配置**GARMIN_SECRET_STRING**参数
-
-示例：
+如果已安装 GitHub CLI，可以直接写入 Secret：
 
 ```bash
-python run_page/garmin_sync.py xxxxxxxxxxx
+gh secret set GARMIN_TOKEN_B64 < "$HOME/.running-page/garmin_token.b64"
+```
+
+本地同步时，将 token 解码到同一个私有目录。不要在 macOS 上使用 `/tmp` 等含符号链接的路径，`python-garminconnect` 会拒绝这类 token 路径。
+
+```bash
+openssl base64 -d -A -in "$HOME/.running-page/garmin_token.b64" -out "$HOME/.running-page/garmin_tokens.json"
+chmod 600 "$HOME/.running-page/garmin_tokens.json"
+python run_page/garmin_sync.py "$HOME/.running-page/garmin_tokens.json"
 ```
 
 </details>
@@ -641,33 +652,31 @@ python run_page/garmin_sync.py xxxxxxxxxxx
 - 如果你只想同步跑步数据请增加 --only-run
 - 如果你想同步 `tcx` 格式，增加命令 --tcx
 - 如果你想同步 `fit` 格式，增加命令 --fit
-- 如果你使用 Garmin 作为数据源建议您将代码拉取到本地获取 Garmin 国际区的密钥，注意**Python 版本必须>=3.10**
+- 请在可信的本地环境生成 Garmin token，注意 **Python 版本必须 >=3.12**。
 
-#### 获取佳明 CN 的密钥
-
-在终端中输入以下命令
+#### 生成佳明 CN token
 
 ```bash
-# to get secret_string
-python run_page/get_garmin_secret.py ${your email} ${your password} --is-cn
+umask 077
+mkdir -p "$HOME/.running-page"
+chmod 700 "$HOME/.running-page"
+python run_page/get_garmin_secret.py ${your_email} --is-cn > "$HOME/.running-page/garmin_cn_token.b64"
 ```
 
-![get_garmin_cn_secret](docs/get_garmin_cn_secret.jpg)
+使用 GitHub Actions 时，将 base64 内容保存为 `GARMIN_TOKEN_B64_CN`。刷新后的 token 同样通过上面说明的 `GARMIN_SECRET_UPDATER_TOKEN` 写回。
 
-#### 执行佳明国区同步脚本
-
-复制上述终端中输出的密钥，如果您是使用 GitHub 请在 GitHub Action 中配置**GARMIN_SECRET_STRING_CN** 参数
-![get_garmin_secret](docs/add_garmin_secret_cn_string.jpg)
-示例：
+本地同步：
 
 ```bash
-python run_page/garmin_sync.py xxxxxxxxx --is-cn
+openssl base64 -d -A -in "$HOME/.running-page/garmin_cn_token.b64" -out "$HOME/.running-page/garmin_cn_tokens.json"
+chmod 600 "$HOME/.running-page/garmin_cn_tokens.json"
+python run_page/garmin_sync.py "$HOME/.running-page/garmin_cn_tokens.json" --is-cn
 ```
 
 仅同步跑步数据：
 
 ```bash
-python run_page/garmin_sync.py xxxxxxxxxx --is-cn --only-run
+python run_page/garmin_sync.py "$HOME/.running-page/garmin_cn_tokens.json" --is-cn --only-run
 ```
 
 </details>
@@ -680,30 +689,20 @@ python run_page/garmin_sync.py xxxxxxxxxx --is-cn --only-run
 <br>
 
 - 如果你只想同步 `type running` 使用参数 --only-run
-  **The Python version must be >=3.10**
+  **Python 版本必须 >=3.12**
 
-#### 获取佳明 CN 的密钥
-
-在终端中输入以下命令
+#### 生成并使用两个 token 文件
 
 ```bash
-python run_page/get_garmin_secret.py ${your email} ${your password} --is-cn
-```
-
-#### 获取佳明全球的密钥
-
-在终端中输入以下命令
-
-```bash
-python run_page/get_garmin_secret.py ${your email} ${your password}
-```
-
-#### 同步 佳明 CN 到 佳明全球
-
-在终端中输入以下命令
-
-```bash
-python run_page/garmin_sync_cn_global.py ${garmin_cn_secret_string} ${garmin_secret_string}
+umask 077
+mkdir -p "$HOME/.running-page"
+chmod 700 "$HOME/.running-page"
+python run_page/get_garmin_secret.py ${cn_email} --is-cn > "$HOME/.running-page/garmin_cn_token.b64"
+python run_page/get_garmin_secret.py ${global_email} > "$HOME/.running-page/garmin_token.b64"
+openssl base64 -d -A -in "$HOME/.running-page/garmin_cn_token.b64" -out "$HOME/.running-page/garmin_cn_tokens.json"
+openssl base64 -d -A -in "$HOME/.running-page/garmin_token.b64" -out "$HOME/.running-page/garmin_tokens.json"
+chmod 600 "$HOME/.running-page/garmin_cn_tokens.json" "$HOME/.running-page/garmin_tokens.json"
+python run_page/garmin_sync_cn_global.py "$HOME/.running-page/garmin_cn_tokens.json" "$HOME/.running-page/garmin_tokens.json"
 ```
 
 </details>
@@ -903,15 +902,15 @@ python run_page/tcx_to_strava_sync.py xxx xxx xxx --all
 3. 在项目根目录下执行：
 
 ```bash
-python3 run_page/tcx_to_garmin_sync.py ${{ secrets.GARMIN_SECRET_STRING_CN }} --is-cn
+python3 run_page/tcx_to_garmin_sync.py "$HOME/.running-page/garmin_cn_tokens.json" --is-cn
 ```
 
 示例：
 
 ```bash
-python run_page/tcx_to_garmin_sync.py xxx --is-cn
+python run_page/tcx_to_garmin_sync.py "$HOME/.running-page/garmin_cn_tokens.json" --is-cn
 或佳明国际
-python run_page/tcx_to_garmin_sync.py xxx
+python run_page/tcx_to_garmin_sync.py "$HOME/.running-page/garmin_tokens.json"
 ```
 
 > 如果你已经上传过需要跳过判断增加参数 `--all`
@@ -978,13 +977,13 @@ python run_page/nike_to_strava_sync.py eyJhbGciThiMTItNGIw******  xxx xxx xxx
 2. 在项目根目录下执行：
 
    ```bash
-   python run_page/garmin_to_strava_sync.py  ${client_id} ${client_secret} ${strava_refresh_token} ${garmin_secret_string} --is-cn
+   python run_page/garmin_to_strava_sync.py ${client_id} ${client_secret} ${strava_refresh_token} "$HOME/.running-page/garmin_cn_tokens.json" --is-cn
    ```
 
    示例：
 
    ```bash
-   python run_page/garmin_to_strava_sync.py  xxx xxx xxx xx xxx
+   python run_page/garmin_to_strava_sync.py xxx xxx xxx "$HOME/.running-page/garmin_tokens.json"
    ```
 
 </details>
@@ -1001,13 +1000,13 @@ python run_page/nike_to_strava_sync.py eyJhbGciThiMTItNGIw******  xxx xxx xxx
 2. 在项目根目录下执行：
 
    ```bash
-   python run_page/strava_to_garmin_sync.py ${{ secrets.STRAVA_CLIENT_ID }} ${{ secrets.STRAVA_CLIENT_SECRET }} ${{ secrets.STRAVA_CLIENT_REFRESH_TOKEN }}  ${{ secrets.GARMIN_SECRET_STRING }} ${{ secrets.STRAVA_EMAIL }} ${{ secrets.STRAVA_PASSWORD }}
+   python run_page/strava_to_garmin_sync.py ${{ secrets.STRAVA_CLIENT_ID }} ${{ secrets.STRAVA_CLIENT_SECRET }} ${{ secrets.STRAVA_CLIENT_REFRESH_TOKEN }} "$HOME/.running-page/garmin_tokens.json" ${{ secrets.STRAVA_EMAIL }} ${{ secrets.STRAVA_PASSWORD }}
    ```
 
    如果你的佳明账号是中国区，执行如下的命令：
 
    ```bash
-   python run_page/strava_to_garmin_sync.py ${{ secrets.STRAVA_CLIENT_ID }} ${{ secrets.STRAVA_CLIENT_SECRET }} ${{ secrets.STRAVA_CLIENT_REFRESH_TOKEN }}  ${{ secrets.GARMIN_SECRET_STRING_CN }} ${{ secrets.STRAVA_EMAIL }} ${{ secrets.STRAVA_PASSWORD }} --is-cn
+   python run_page/strava_to_garmin_sync.py ${{ secrets.STRAVA_CLIENT_ID }} ${{ secrets.STRAVA_CLIENT_SECRET }} ${{ secrets.STRAVA_CLIENT_REFRESH_TOKEN }} "$HOME/.running-page/garmin_cn_tokens.json" ${{ secrets.STRAVA_EMAIL }} ${{ secrets.STRAVA_PASSWORD }} --is-cn
    ```
 
    如果要在同步到 Garmin 的运动记录中添加 Garmin 设备信息，需要添加`--use_fake_garmin_device`参数，这将在同步的 Garmin 锻炼记录中添加一个 Garmin 设备（默认情况下为 `Garmin Forerunner 245`，您可以在`garmin_device_adaptor.py`中更改设备信息），运动记录中有了设备信息之后就可以同步到其他 APP 中，比如数字心动（攒上马积分）这类不能通过 Apple Watch 同步的 APP，当然也可以同步到 Keep，悦跑圈，咕咚等 APP。
@@ -1017,7 +1016,7 @@ python run_page/nike_to_strava_sync.py eyJhbGciThiMTItNGIw******  xxx xxx xxx
    最终执行的命令如下：
 
    ```bash
-   python run_page/strava_to_garmin_sync.py ${{ secrets.STRAVA_CLIENT_ID }} ${{ secrets.STRAVA_CLIENT_SECRET }} ${{ secrets.STRAVA_CLIENT_REFRESH_TOKEN }}  ${{ secrets.GARMIN_SECRET_STRING_CN }} ${{ secrets.STRAVA_EMAIL }} ${{ secrets.STRAVA_PASSWORD }} --use_fake_garmin_device
+   python run_page/strava_to_garmin_sync.py ${{ secrets.STRAVA_CLIENT_ID }} ${{ secrets.STRAVA_CLIENT_SECRET }} ${{ secrets.STRAVA_CLIENT_REFRESH_TOKEN }} "$HOME/.running-page/garmin_cn_tokens.json" ${{ secrets.STRAVA_EMAIL }} ${{ secrets.STRAVA_PASSWORD }} --is-cn --use_fake_garmin_device
    ```
 
    > 注意：**首次初始化的时候，如果你有大量的 strava 跑步数据，可能有些数据会上传失败，只需要多重试几次即可。**
@@ -1311,7 +1310,7 @@ python3 run_page/auto_share_sync.py --api_key xxxxxxxxx --base_url xxxxxxxx --da
 
 5. 下滑点击 `环境变量 (高级)`，并添加一个如下的变量：
 
-   > 变量名称 = `PYTHON_VERSION`, 值 = `3.11`
+   > 变量名称 = `PYTHON_VERSION`, 值 = `3.12`
 
 6. 点击 `保存并部署`，完成部署。
 

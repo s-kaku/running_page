@@ -3,12 +3,15 @@
 1. clone or Fork before vercel 404 need to pull the latest code
 2. python in README means python3 python
 3. use v2.0 need change vercel setting from gatsby to vite
-4. 2023.09.26 garmin need secret_string(and in Actions) get
+4. Garmin authentication uses a native DI OAuth token generated locally with Python 3.12 or newer.
 
    ```bash
-     python run_page/get_garmin_secret.py ${email} ${password}
+     umask 077
+     mkdir -p "$HOME/.running-page"
+     chmod 700 "$HOME/.running-page"
+     python run_page/get_garmin_secret.py ${email} > "$HOME/.running-page/garmin_token.b64"
      # if cn
-     python run_page/get_garmin_secret.py ${email} ${password} --is-cn
+     python run_page/get_garmin_secret.py ${email} --is-cn > "$HOME/.running-page/garmin_cn_token.b64"
    ```
 
 5. 2024.09.29: Added `Elevation Gain` field, If you forked the project before this update, please run the following command:
@@ -185,7 +188,7 @@ Clone or fork the repo.
 git clone https://github.com/yihong0618/running_page.git --depth=1
 ```
 
-## Installation and testing (node >= 20 python >= 3.11)
+## Installation and testing (node >= 20 python >= 3.12)
 
 ```bash
 pip3 install -r requirements.txt
@@ -227,10 +230,10 @@ Keyboard shortcuts inside TUI:
 docker build -t running_page:latest . --build-arg app=NRC --build-arg nike_refresh_token=""
 
 # Garmin
-docker build -t running_page:latest . --build-arg app=Garmin --build-arg secret_string=""
+docker build -t running_page:latest . --build-arg app=Garmin --secret id=garmin_token_b64,src="$HOME/.running-page/garmin_token.b64"
 
 # Garmin-CN
-docker build -t running_page:latest . --build-arg app=Garmin-CN --build-arg secret_string=""
+docker build -t running_page:latest . --build-arg app=Garmin-CN --secret id=garmin_token_b64,src="$HOME/.running-page/garmin_cn_token.b64"
 
 # Strava
 docker build -t running_page:latest . --build-arg app=Strava --build-arg client_id=""  --build-arg client_secret=""  --build-arg refresh_token=""
@@ -465,37 +468,39 @@ python run_page/fit_sync.py
 - If you only want to sync `type running` add args --only-run
 - If you only want `tcx` files add args --tcx
 - If you only want `fit` files add args --fit
-- If you are using Garmin as a data source, it is recommended that you pull the code to your local environment to run and obtain the Garmin secret.
-  **The Python version must be >=3.8**
+- Generate Garmin tokens in a trusted local environment. **Python 3.12 or newer is required.**
 
-#### Get Garmin Secret
+#### Generate a Garmin token
 
-Enter the following command in the terminal
+The password and MFA code, when required, are prompted without being placed in shell history. The output is a base64-encoded native DI OAuth token. Existing Garth `GARMIN_SECRET_STRING` values are incompatible and must be regenerated.
 
 ```bash
-# to get secret_string
-python run_page/get_garmin_secret.py ${your email} ${your password}
+umask 077
+mkdir -p "$HOME/.running-page"
+chmod 700 "$HOME/.running-page"
+python run_page/get_garmin_secret.py ${your_email} > "$HOME/.running-page/garmin_token.b64"
 ```
 
-#### Execute Garmin Sync Script
+For GitHub Actions, save the file contents as the repository secret `GARMIN_TOKEN_B64`. The workflow writes refreshed tokens back after each run. Create a fine-grained personal access token restricted to this repository with **Secrets: read and write**, and save it as `GARMIN_SECRET_UPDATER_TOKEN`. See [GitHub's repository permissions for Actions secrets](https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens#repository-permissions-for-actions-secrets).
 
-Copy the Secret output in the terminal,If you are using GitHub, please configure **GARMIN_SECRET_STRING** in `GitHub Action`.
+If GitHub CLI is installed, the Garmin secret can be set without printing it again:
 
 ```bash
-# use this secret_string
-python run_page/garmin_sync.py ${secret_string}
+gh secret set GARMIN_TOKEN_B64 < "$HOME/.running-page/garmin_token.b64"
 ```
 
-example：
+For a local sync, decode the token to the same private directory. Do not use a symlinked path such as `/tmp` on macOS; `python-garminconnect` rejects symlinks in token paths.
 
 ```bash
-python run_page/get_garmin_secret.py xxxxxxxxxxx
+openssl base64 -d -A -in "$HOME/.running-page/garmin_token.b64" -out "$HOME/.running-page/garmin_tokens.json"
+chmod 600 "$HOME/.running-page/garmin_tokens.json"
+python run_page/garmin_sync.py "$HOME/.running-page/garmin_tokens.json"
 ```
 
-only-run：
+Only running activities:
 
 ```bash
-python run_page/garmin_sync.py xxxxxxxxxxxxxx(secret_string) --only-run
+python run_page/garmin_sync.py "$HOME/.running-page/garmin_tokens.json" --only-run
 ```
 
 </details>
@@ -510,35 +515,33 @@ python run_page/garmin_sync.py xxxxxxxxxxxxxx(secret_string) --only-run
 - If you only want to sync `type running` add args --only-run
 - If you only want `tcx` files add args --tcx
 - If you only want `fit` files add args --fit
-- If you are using Garmin as a data source, it is recommended that you pull the code to your local environment to run and obtain the Garmin secret.
-  **The Python version must be >=3.10**
+- Generate Garmin tokens in a trusted local environment. **Python 3.12 or newer is required.**
 
-#### Get Garmin CN Secret
+#### Generate a Garmin CN token
 
-Enter the following command in the terminal
+The password and MFA code, when required, are prompted interactively.
 
 ```bash
-# to get secret_string
-python run_page/get_garmin_secret.py ${your email} ${your password} --is-cn
+umask 077
+mkdir -p "$HOME/.running-page"
+chmod 700 "$HOME/.running-page"
+python run_page/get_garmin_secret.py ${your_email} --is-cn > "$HOME/.running-page/garmin_cn_token.b64"
 ```
 
-![get_garmin_cn_secret](docs/get_garmin_cn_secret.jpg)
+For GitHub Actions, save the base64 value as `GARMIN_TOKEN_B64_CN`. The same `GARMIN_SECRET_UPDATER_TOKEN` described above is used to persist refreshed tokens.
 
-#### Execute Garmin CN Sync Script
-
-Copy the Secret output in the terminal,If you are using GitHub, please configure **GARMIN_SECRET_STRING_CN** in GitHub Action.
-![get_garmin_secret](docs/add_garmin_secret_cn_string.jpg)
-
-example：
+For a local sync:
 
 ```bash
-python run_page/garmin_sync.py xxxxxxxxx(secret_string) --is-cn
+openssl base64 -d -A -in "$HOME/.running-page/garmin_cn_token.b64" -out "$HOME/.running-page/garmin_cn_tokens.json"
+chmod 600 "$HOME/.running-page/garmin_cn_tokens.json"
+python run_page/garmin_sync.py "$HOME/.running-page/garmin_cn_tokens.json" --is-cn
 ```
 
-only-run：
+Only running activities:
 
 ```bash
-python run_page/garmin_sync.py xxxxxxxxxxxxxx(secret_string)  --is-cn --only-run
+python run_page/garmin_sync.py "$HOME/.running-page/garmin_cn_tokens.json" --is-cn --only-run
 ```
 
 </details>
@@ -551,33 +554,20 @@ python run_page/garmin_sync.py xxxxxxxxxxxxxx(secret_string)  --is-cn --only-run
 <br>
 
 - If you only want to sync `type running` add args --only-run
-  **The Python version must be >=3.10**
+  **Python 3.12 or newer is required.**
 
-#### Get Garmin CN Secret
-
-Enter the following command in the terminal
+#### Generate both token files
 
 ```bash
-# to get secret_string
-python run_page/get_garmin_secret.py ${your email} ${your password} --is-cn
-```
-
-#### Get Garmin Secret
-
-Enter the following command in the terminal
-
-```bash
-# to get secret_string
-python run_page/get_garmin_secret.py ${your email} ${your password}
-```
-
-#### Sync Garmin CN to Garmin
-
-Enter the following command in the terminal
-
-```bash
-# to sync garmin-cn to garmin-global
-python run_page/garmin_sync_cn_global.py ${garmin_cn_secret_string} ${garmin_secret_string}
+umask 077
+mkdir -p "$HOME/.running-page"
+chmod 700 "$HOME/.running-page"
+python run_page/get_garmin_secret.py ${cn_email} --is-cn > "$HOME/.running-page/garmin_cn_token.b64"
+python run_page/get_garmin_secret.py ${global_email} > "$HOME/.running-page/garmin_token.b64"
+openssl base64 -d -A -in "$HOME/.running-page/garmin_cn_token.b64" -out "$HOME/.running-page/garmin_cn_tokens.json"
+openssl base64 -d -A -in "$HOME/.running-page/garmin_token.b64" -out "$HOME/.running-page/garmin_tokens.json"
+chmod 600 "$HOME/.running-page/garmin_cn_tokens.json" "$HOME/.running-page/garmin_tokens.json"
+python run_page/garmin_sync_cn_global.py "$HOME/.running-page/garmin_cn_tokens.json" "$HOME/.running-page/garmin_tokens.json"
 ```
 
 </details>
@@ -783,15 +773,15 @@ python run_page/nike_sync.py eyJhbGciThiMTItNGIw******
 3. Execute in the root directory:
 
    ```bash
-   python3 run_page/tcx_to_garmin_sync.py ${{ secrets.GARMIN_SECRET_STRING_CN }} --is-cn
+   python3 run_page/tcx_to_garmin_sync.py "$HOME/.running-page/garmin_cn_tokens.json" --is-cn
    ```
 
    example：
 
    ```bash
-   python run_page/tcx_to_garmin_sync.py xxx --is-cn
+   python run_page/tcx_to_garmin_sync.py "$HOME/.running-page/garmin_cn_tokens.json" --is-cn
    or Garmin Global
-   python run_page/tcx_to_garmin_sync.py xxx
+   python run_page/tcx_to_garmin_sync.py "$HOME/.running-page/garmin_tokens.json"
    ```
 
 4. if you want to all files add args `--all`
@@ -858,13 +848,13 @@ python run_page/nike_to_strava_sync.py eyJhbGciThiMTItNGIw******  xxx xxx xxx
 2. Execute in the root directory:
 
    ```bash
-   python run_page/garmin_to_strava_sync.py  ${client_id} ${client_secret} ${strava_refresh_token} ${garmin_secret_string} --is-cn
+   python run_page/garmin_to_strava_sync.py ${client_id} ${client_secret} ${strava_refresh_token} "$HOME/.running-page/garmin_cn_tokens.json" --is-cn
    ```
 
    e.g.
 
    ```bash
-   python run_page/garmin_to_strava_sync.py  xxx xxx xxx xx
+   python run_page/garmin_to_strava_sync.py xxx xxx xxx "$HOME/.running-page/garmin_tokens.json"
    ```
 
 </details>
@@ -880,13 +870,13 @@ python run_page/nike_to_strava_sync.py eyJhbGciThiMTItNGIw******  xxx xxx xxx
 2. Execute in the root directory:
 
    ```bash
-   python run_page/strava_to_garmin_sync.py ${{ secrets.STRAVA_CLIENT_ID }} ${{ secrets.STRAVA_CLIENT_SECRET }} ${{ secrets.STRAVA_CLIENT_REFRESH_TOKEN }}  ${{ secrets.GARMIN_SECRET_STRING }} ${{ secrets.STRAVA_EMAIL }} ${{ secrets.STRAVA_PASSWORD }}
+   python run_page/strava_to_garmin_sync.py ${{ secrets.STRAVA_CLIENT_ID }} ${{ secrets.STRAVA_CLIENT_SECRET }} ${{ secrets.STRAVA_CLIENT_REFRESH_TOKEN }} "$HOME/.running-page/garmin_tokens.json" ${{ secrets.STRAVA_EMAIL }} ${{ secrets.STRAVA_PASSWORD }}
    ```
 
    if your garmin account region is **China**, you need to execute the command:
 
    ```bash
-   python run_page/strava_to_garmin_sync.py ${{ secrets.STRAVA_CLIENT_ID }} ${{ secrets.STRAVA_CLIENT_SECRET }} ${{ secrets.STRAVA_CLIENT_REFRESH_TOKEN }}  ${{ secrets.GARMIN_SECRET_STRING_CN }} ${{ secrets.STRAVA_EMAIL }} ${{ secrets.STRAVA_PASSWORD }}  ${{ secrets.STRAVA_JWT }} --is-cn
+   python run_page/strava_to_garmin_sync.py ${{ secrets.STRAVA_CLIENT_ID }} ${{ secrets.STRAVA_CLIENT_SECRET }} ${{ secrets.STRAVA_CLIENT_REFRESH_TOKEN }} "$HOME/.running-page/garmin_cn_tokens.json" ${{ secrets.STRAVA_EMAIL }} ${{ secrets.STRAVA_PASSWORD }} ${{ secrets.STRAVA_JWT }} --is-cn
    ```
 
    If you want to add Garmin Device during sync, you should add `--use_fake_garmin_device` argument, this will add a Garmin Device (Garmin Forerunner 245 by default, and you can change device in `garmin_device_adaptor.py`) in synced Garmin workout record, this is essential when you want to sync the workout record to other APP like Keep, JoyRun etc.
@@ -896,7 +886,7 @@ python run_page/nike_to_strava_sync.py eyJhbGciThiMTItNGIw******  xxx xxx xxx
    the final command will be:
 
    ```bash
-   python run_page/strava_to_garmin_sync.py ${{ secrets.STRAVA_CLIENT_ID }} ${{ secrets.STRAVA_CLIENT_SECRET }} ${{ secrets.STRAVA_CLIENT_REFRESH_TOKEN }}  ${{ secrets.GARMIN_SECRET_STRING_CN }} ${{ secrets.STRAVA_EMAIL }} ${{ secrets.STRAVA_PASSWORD }} ${{ secrets.STRAVA_JWT }}--use_fake_garmin_device
+   python run_page/strava_to_garmin_sync.py ${{ secrets.STRAVA_CLIENT_ID }} ${{ secrets.STRAVA_CLIENT_SECRET }} ${{ secrets.STRAVA_CLIENT_REFRESH_TOKEN }} "$HOME/.running-page/garmin_cn_tokens.json" ${{ secrets.STRAVA_EMAIL }} ${{ secrets.STRAVA_PASSWORD }} ${{ secrets.STRAVA_JWT }} --is-cn --use_fake_garmin_device
    ```
 
    ps: **when initializing for the first time, if you have a large amount of strava data, some data may fail to upload, just retry several times.**
@@ -1186,7 +1176,7 @@ For more display effects, see:
 
 5. Scroll down, click `Environment variables (advanced)`, then add a variable like the below:
 
-   > Variable name = `PYTHON_VERSION`, Value = `3.11`
+   > Variable name = `PYTHON_VERSION`, Value = `3.12`
 
 6. Click `Save and Deploy`
 

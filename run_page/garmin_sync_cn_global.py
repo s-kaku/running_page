@@ -6,21 +6,29 @@ Copy most code from https://github.com/cyberjunky/python-garminconnect
 import argparse
 import asyncio
 import os
-import sys
+from pathlib import Path
 
 
 from config import FIT_FOLDER, GPX_FOLDER, JSON_FILE, SQL_FILE
-from garmin_sync import Garmin, get_downloaded_ids
+from garmin_connector import (
+    GarminActivityScope,
+    GarminConnector,
+    GarminDomain,
+    GarminFileType,
+)
+from garmin_sync import get_downloaded_ids
 from garmin_sync import download_new_activities
 from utils import make_activities_file
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "cn_secret_string", nargs="?", help="secret_string fro get_garmin_secret.py"
+        "cn_token_store",
+        help="path to the Garmin China token file",
     )
     parser.add_argument(
-        "global_secret_string", nargs="?", help="secret_string fro get_garmin_secret.py"
+        "global_token_store",
+        help="path to the Garmin Global token file",
     )
     parser.add_argument(
         "--only-run",
@@ -30,13 +38,11 @@ if __name__ == "__main__":
     )
 
     options = parser.parse_args()
-    secret_string_cn = options.cn_secret_string
-    secret_string_global = options.global_secret_string
-    auth_domain = "CN"
-    is_only_running = options.only_run
-    if secret_string_cn is None or secret_string_global is None:
-        print("Missing argument nor valid configuration file")
-        sys.exit(1)
+    cn_token_store = Path(options.cn_token_store)
+    global_token_store = Path(options.global_token_store)
+    activity_scope = (
+        GarminActivityScope.RUNNING if options.only_run else GarminActivityScope.ALL
+    )
 
     # Step 1:
     # Sync all activities from Garmin CN to Garmin Global in FIT format
@@ -52,19 +58,15 @@ if __name__ == "__main__":
     if not os.path.exists(folder):
         os.mkdir(folder)
 
-    loop = asyncio.get_event_loop()
-    future = asyncio.ensure_future(
+    new_ids, id2title = asyncio.run(
         download_new_activities(
-            secret_string_cn,
-            auth_domain,
+            cn_token_store,
+            GarminDomain.CHINA,
             downloaded_activity,
-            is_only_running,
-            folder,
-            "fit",
+            activity_scope,
+            GarminFileType.FIT,
         )
     )
-    loop.run_until_complete(future)
-    new_ids, id2title = future.result()
 
     to_upload_files = []
     for i in new_ids:
@@ -77,16 +79,12 @@ if __name__ == "__main__":
 
     print("Files to sync:" + " ".join(to_upload_files))
     # FIXME is com ok here?
-    garmin_global_client = Garmin(
-        secret_string_global,
-        "COM",
-        is_only_running,
+    garmin_global_client = GarminConnector(
+        global_token_store,
+        GarminDomain.GLOBAL,
+        activity_scope,
     )
-    loop = asyncio.get_event_loop()
-    future = asyncio.ensure_future(
-        garmin_global_client.upload_activities_files(to_upload_files)
-    )
-    loop.run_until_complete(future)
+    asyncio.run(garmin_global_client.upload_activities_files(to_upload_files))
 
     # Step 2:
     # Generate track from fit/gpx file
